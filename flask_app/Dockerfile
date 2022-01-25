@@ -13,4 +13,4 @@ EXPOSE 8000
 USER webapp
 COPY --chown=webapp:webapp app.py /code/
 
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "app"]
+CMD ["gunicorn", "--workers", "5", "-b", "0.0.0.0:8000", "app"]
