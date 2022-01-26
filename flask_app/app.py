@@ -1,6 +1,8 @@
 import os
 import socket
+import uuid
 
+from google.cloud import storage
 from flask import Flask
 from flask import request
 from psycopg2 import extras
@@ -19,6 +21,8 @@ postgreSQL_pool = psycopg2.pool.SimpleConnectionPool(
     port=os.getenv('POSTGRES_PORT'),
     database=os.getenv('POSTGRES_DATABASE'),
 )
+
+CLOUD_STORAGE_BUCKET = os.getenv('CLOUD_STORAGE_BUCKET')
 
 hostname = socket.gethostname()
 
@@ -59,7 +63,7 @@ def hostinfo():
     return data
 
 
-@app.route('/db-info/', methods=['POST'])
+@app.route('/db-info', methods=['POST'])
 def db_info():
     data = request.json
     payload = extras.Json(data['payload'])
@@ -93,3 +97,35 @@ def db_info_id(row_id):
         else:
             response = response_from_row(rows[0])
     return response
+
+
+@app.route('/image')
+def image_index() -> str:
+    return """
+<form method="POST" action="image/upload" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <input type="submit">
+</form>
+"""
+
+
+@app.route('/image/upload', methods=['POST'])
+def image_upload() -> dict:
+    uploaded_file = request.files.get('file')
+
+    if not uploaded_file:
+        return {
+            'status': 'NO_FILE',
+            'message': 'No file provided'
+        }
+
+    gcs = storage.Client()
+    bucket = gcs.get_bucket(CLOUD_STORAGE_BUCKET)
+
+    blob = bucket.blob(uuid.uuid4().hex + uploaded_file.filename)
+    blob.upload_from_string(
+        uploaded_file.read(),
+        content_type=uploaded_file.content_type
+    )
+    blob.make_public()
+    return {'public_url': blob.public_url}
