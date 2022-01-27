@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: flask-kube
+        image: ghcr.io/ojgenbar/flask-kube-x86:0.3
+        ports:
+        - containerPort: 8000
+        env:
+          - name: CLOUD_STORAGE_BUCKET
+            valueFrom:
+              configMapKeyRef:
+                name: webapp-configmap
+                key: cloud_storage_bucket
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            valueFrom:
+              configMapKeyRef:
+                name: webapp-configmap
+                key: google_application_credentials
+          - name: POSTGRES_HOST
+            valueFrom:
+              secretKeyRef:
+                name: database-connection
+                key: host
+          - name: POSTGRES_PORT
+            valueFrom:
+              secretKeyRef:
+                name: database-connection
+                key: port
+          - name: POSTGRES_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: database-connection
+                key: database
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: database-connection
+                key: user
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database-connection
+                key: password
+        volumeMounts:
+          - name: gcloud-key
+            mountPath: /keys
+            readOnly: true
+      volumes:
+        - name: gcloud-key
+          secret:
+            secretName: gcloud-key-file
+            items:
+              - key: data
+                path: gcloud_key.json
+      imagePullSecrets:
+        - name: gh-docker-registry-secret
