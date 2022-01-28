@@ -13,7 +13,7 @@ jobs:
 
       # setup Docker build action
       - name: Generate Tag
-        run: echo "0.3.${{ github.run_number }}" >> $BUILD_IMAGE_TAG
+        run: echo "BUILD_IMAGE_TAG=0.3.${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         id: buildx
@@ -32,7 +32,7 @@ jobs:
           context: ./flask_app
           tags: |
             ghcr.io/ojgenbar/flask-kube-x86:latest
-            ghcr.io/ojgenbar/flask-kube-x86:0.3.{{ $BUILD_IMAGE_TAG }}
+            ghcr.io/ojgenbar/flask-kube-x86:0.3.$BUILD_IMAGE_TAG
           push: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Image digest
