@@ -38,4 +38,10 @@ jobs:
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
 
+      - uses: danielr1996/kubectl-action@1.0.0
+        name: Deploy
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          args: set image deployment/webapp flask-kube=ghcr.io/ojgenbar/flask-kube-x86:${{ env.BUILD_IMAGE_TAG }}
+
       - run: echo "🍏 This job's status is ${{ job.status }}."
