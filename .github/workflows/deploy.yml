@@ -32,7 +32,7 @@ jobs:
           context: ./flask_app
           tags: |
             ghcr.io/ojgenbar/flask-kube-x86:latest
-            ghcr.io/ojgenbar/flask-kube-x86:0.3.$BUILD_IMAGE_TAG
+            ghcr.io/ojgenbar/flask-kube-x86:0.3.${{ env.BUILD_IMAGE_TAG }}
           push: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Image digest
